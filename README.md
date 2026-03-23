@@ -286,7 +286,6 @@ USERS
 ## ERD DIAGRAM
 
 ![User Messaging Protocol-2026-03-23-110620](https://github.com/user-attachments/assets/9f395709-292e-44c5-9a86-bfcdb0a8d965)
-<svg id="export-svg" width="100%" xmlns="http://www.w3.org/2000/svg" class="erDiagram" style="max-width: 3747.02px; background: rgb(255, 255, 255);" viewBox="0 0 3747.020751953125 2423.5" role="graphics-document document" aria-roledescription="er"><style xmlns="http://www.w3.org/1999/xhtml">/* Copyright 2019 The Recursive Project Authors (github.com/arrowtype/recursive)
 
 
 ## Some links
