@@ -4,7 +4,7 @@
 -- =============================================================================
 
 -- Enable UUID extension
-CREATE EXTENSION IF NOT EXISTS "uuid-ossp"; -- generating IDs
+CREATE EXTENSION IF NOT EXISTS "pgcrypto";  -- gen_random_uuid()
 CREATE EXTENSION IF NOT EXISTS "pg_trgm";  -- for full-text search on messages
 
 -- =============================================================================
@@ -31,7 +31,7 @@ CREATE TABLE status_types (
 -- 3. USERS
 -- =============================================================================
 CREATE TABLE users (
-    user_id       UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
+    user_id       UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     created_date  TIMESTAMP    NOT NULL DEFAULT NOW(),
     last_login    TIMESTAMP,
     is_deleted    BOOLEAN      NOT NULL DEFAULT FALSE
@@ -41,7 +41,7 @@ CREATE TABLE users (
 -- 4. PROTOCOL_ACCOUNTS
 -- =============================================================================
 CREATE TABLE protocol_accounts (
-    account_id                   UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
+    account_id                   UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id                      UUID         NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
     protocol_id                  INT          NOT NULL REFERENCES protocols(protocol_id),
     status_type_id               INT          REFERENCES status_types(status_type_id),
@@ -61,7 +61,7 @@ CREATE TABLE protocol_accounts (
 -- 5. CONTACTS
 -- =============================================================================
 CREATE TABLE contacts (
-    contact_id                UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
+    contact_id                UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     account_id                UUID         NOT NULL REFERENCES protocol_accounts(account_id) ON DELETE CASCADE,
     contact_protocol_username VARCHAR(150) NOT NULL
 );
@@ -70,7 +70,7 @@ CREATE TABLE contacts (
 -- 6. CONTACT_GROUPS
 -- =============================================================================
 CREATE TABLE contact_groups (
-    cg_id          UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
+    cg_id          UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     contact_id     UUID         NOT NULL REFERENCES contacts(contact_id) ON DELETE CASCADE,
     group_name     VARCHAR(100) NOT NULL,
     created_date   TIMESTAMP    NOT NULL DEFAULT NOW()
@@ -80,7 +80,7 @@ CREATE TABLE contact_groups (
 -- 7. BLOCKED_USERS
 -- =============================================================================
 CREATE TABLE blocked_users (
-    block_id            UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
+    block_id            UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     account_id          UUID         NOT NULL REFERENCES protocol_accounts(account_id) ON DELETE CASCADE, -- blocker
     blocked_account_id  UUID         NOT NULL REFERENCES protocol_accounts(account_id) ON DELETE CASCADE, -- blocked
     blocked_username    VARCHAR(150) NOT NULL,
@@ -110,7 +110,7 @@ CREATE TABLE messages (
 -- 9. READ_RECEIPTS
 -- =============================================================================
 CREATE TABLE read_receipts (
-    receipt_id      UUID      PRIMARY KEY DEFAULT uuid_generate_v4(),
+    receipt_id      UUID      PRIMARY KEY DEFAULT gen_random_uuid(),
     message_id      BIGINT    NOT NULL REFERENCES messages(message_id) ON DELETE CASCADE,
     read_by_account_id UUID      NOT NULL REFERENCES protocol_accounts(account_id) ON DELETE CASCADE,
     read_timestamp  TIMESTAMP NOT NULL DEFAULT NOW(),
@@ -122,7 +122,7 @@ CREATE TABLE read_receipts (
 -- Metadata-only (no BLOBs). Files are stored on disk; path recorded here.
 -- =============================================================================
 CREATE TABLE attachments (
-    attachment_id    UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
+    attachment_id    UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     message_id       BIGINT       NOT NULL REFERENCES messages(message_id) ON DELETE CASCADE,
     filename         VARCHAR(300) NOT NULL,
     file_size_bytes  BIGINT,
@@ -136,7 +136,7 @@ CREATE TABLE attachments (
 -- 11. MESSAGE_REACTIONS
 -- =============================================================================
 CREATE TABLE message_reactions (
-    reaction_id    UUID      PRIMARY KEY DEFAULT uuid_generate_v4(),
+    reaction_id    UUID      PRIMARY KEY DEFAULT gen_random_uuid(),
     message_id     BIGINT    NOT NULL REFERENCES messages(message_id) ON DELETE CASCADE,
     user_id        UUID      NOT NULL REFERENCES users(user_id) ON DELETE CASCADE,
     emoji          VARCHAR(20) NOT NULL,
@@ -148,7 +148,7 @@ CREATE TABLE message_reactions (
 -- 12. GROUPS  (group chats / chatrooms)
 -- =============================================================================
 CREATE TABLE groups (
-    group_id       UUID         PRIMARY KEY DEFAULT uuid_generate_v4(),
+    group_id       UUID         PRIMARY KEY DEFAULT gen_random_uuid(),
     creator_user_id UUID        NOT NULL REFERENCES users(user_id),
     protocol_id    INT          NOT NULL REFERENCES protocols(protocol_id),
     group_name     VARCHAR(150) NOT NULL,
@@ -190,7 +190,7 @@ EXECUTE FUNCTION enforce_public_group_protocol_support();
 -- 13. GROUP_MEMBERS
 -- =============================================================================
 CREATE TABLE group_members (
-    member_id           UUID        PRIMARY KEY DEFAULT uuid_generate_v4(),
+    member_id           UUID        PRIMARY KEY DEFAULT gen_random_uuid(),
     group_id            UUID        NOT NULL REFERENCES groups(group_id) ON DELETE CASCADE,
     account_id          UUID        NOT NULL REFERENCES protocol_accounts(account_id) ON DELETE CASCADE,
     member_role         VARCHAR(20) NOT NULL DEFAULT 'member'
@@ -223,7 +223,7 @@ CREATE TABLE group_messages (
 -- 15. USER_STATISTICS
 -- =============================================================================
 CREATE TABLE user_statistics (
-    stat_id                        UUID      PRIMARY KEY DEFAULT uuid_generate_v4(),
+    stat_id                        UUID      PRIMARY KEY DEFAULT gen_random_uuid(),
     user_id                        UUID      NOT NULL UNIQUE REFERENCES users(user_id) ON DELETE CASCADE,
     protocol_accounts_count        INT       NOT NULL DEFAULT 0,
     messages_sent_count            INT       NOT NULL DEFAULT 0,
@@ -245,7 +245,7 @@ CREATE TABLE user_statistics (
 -- 16. GROUP_STATISTICS
 -- =============================================================================
 CREATE TABLE group_statistics (
-    gstat_id                    UUID      PRIMARY KEY DEFAULT uuid_generate_v4(),
+    gstat_id                    UUID      PRIMARY KEY DEFAULT gen_random_uuid(),
     group_id                    UUID      NOT NULL UNIQUE REFERENCES groups(group_id) ON DELETE CASCADE,
     total_messages_count        INT       NOT NULL DEFAULT 0,
     member_count                INT       NOT NULL DEFAULT 0,
@@ -299,3 +299,4 @@ INSERT INTO status_types (name, icon) VALUES
     ('do_not_disturb','red_dot'),
     ('offline',      'grey_dot'),
     ('invisible',    'hollow_dot');
+
